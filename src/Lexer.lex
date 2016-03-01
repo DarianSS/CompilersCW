@@ -60,7 +60,7 @@ import static .Sym.*;
 
     Punctuation = [["!".."/"] || [":".."@"] || ["[".."`"] || ["{".."~"]]
 
-    CharLiteral = {Punctuation} | {Letter} | {Digit} | " "   
+    SingleChar = {Punctuation} | {Letter} | {Digit} | " "   
     
     %state STRING, CHARLITERAL
 
@@ -87,8 +87,12 @@ import static .Sym.*;
 	"do"							{ return symbol(sym.DO); }
 	"od"							{ return symbol(sym.OD); }
 	"if"							{ return symbol(sym.IF); }
-	"fi"							{ return symbol(sym.FI);}
-	"elif"							{ return symbol(sym.ELIF);}
+	"fi"							{ return symbol(sym.FI); }
+	"else"							{ return symbol(sym.ELSE); }
+	"elif"							{ return symbol(sym.ELIF); }
+	"top"							{ return symbol(sym.TOP); }
+	"alias"							{ return symbol(sym.ALIAS); }
+	"then"							{ return symbol(sym.THEN); }
 
 	/* boolean literals */ 
  	"T"								{ return symbol(sym.BOOLEAN_LITERAL, true); }
@@ -127,6 +131,7 @@ import static .Sym.*;
 	"-"								{ return symbol(sym.MINUS); }
  	"*"								{ return symbol(sym.MULT); }
  	"/"								{ return symbol(sym.DIV); }
+ 	":"								{ return symbol(sym.COLON); }
  	"::"							{ return symbol(sym.CONCAT); }
 
  	/* string literal */
@@ -149,7 +154,7 @@ import static .Sym.*;
 <STRING> {
 	\"								{ yybegin(YYINITIAL); return symbol(sym.STRING, string.toString()); }
 
-	{CharLiteral}+					{ string.append( yytext() ); }
+	{SingleChar}+					{ string.append( yytext() ); }
 
 	"\\\""							{ string.append( '\"' ); } 
   	"\\'"							{ string.append( '\'' ); }
@@ -157,7 +162,7 @@ import static .Sym.*;
 }
 
 <CHARLITERAL> {
-	{CHARLITERAL}\'					{ yybegin(YYINITIAL); return symbol(sym.CHAR, yytext().charAt(0)); }
+	{SingleChar}\'					{ yybegin(YYINITIAL); return symbol(sym.CHAR, yytext().charAt(0)); }
 }
 
 [^]  {
