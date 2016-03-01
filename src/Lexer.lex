@@ -47,14 +47,16 @@ import static .Sym.*;
 	IdChar = {Letter} | {Digit} | "_"
 	Identifier = {Letter}{IdChar}*
 
-	IntegerLiteral = 0 | "-"? [1-9][0-9]* 
+	//IntegerLiteral = 0 | "-"? [1-9][0-9]* 
     // FloatLiteral = {IntegerLiteral} (\. [0-9]+)?
-    FloatLiteral  = "-"? {FLit1}|{FLit2}|{FLit3}
+    //FloatLiteral  = "-"? {FLit1}|{FLit2}|{FLit3}
     // RatLiteral = (({IntegerLiteral} "_")? ({IntegerLiteral} "/" {IntegerLiteral})?) | {IntegerLiteral}
 
-    FLit1    = [0-9]+ \. [0-9]* 
-	FLit2    = \. [0-9]+ 
-	FLit3    = [0-9]+ 
+    // FLit1    = [0-9]+ \. [0-9]* 
+	// FLit2    = \. [0-9]+ 
+	// FLit3    = [0-9]+ 
+
+	IntegerLiteral = 0 | [1-9][0-9]* 
 
     BooleanLiteral = "T" | "F"
 
