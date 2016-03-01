@@ -38,7 +38,7 @@ parser code {:
 
     public void syntax_error(Symbol current_token) { report_error(
          "Syntax error at line " + (current_token.left+1) + ", column " + current_token.right, null );
-}
+    } 
   }
 
   private Lexer lexer;
@@ -51,13 +51,25 @@ parser code {:
 :};
 
 // Do something with ILLEGAL_CHARARCTER or drop it.
-terminal INTEGER, IDENTIFIER, LET, EQUAL, SEMICOL, PLUS, MINUS, MULT, DIV;
+terminal INT, RAT, FLOAT, BOOL, CHAR, EQUAL, SEMICOL, PLUS, MINUS, MULT, DIV, POW;
+terminal SEQ, DICT;
 terminal LPAREN, RPAREN;
+terminal LT, RT;
+terminal IF, THEN, ELSE, ELIF, FI;
+terminal DO, OD;
+terminal WHILE;
+terminal FORALL, IN;
 terminal BADCHAR;
+terminal COMMA, DOT;
 
 nonterminal statements, statement, top_level;
-nonterminal let_bind, full_exp, simple_exp, operator;
+nonterminal declaration, full_exp, simple_exp, operator;
 nonterminal number;
+nonterminal if_then_statement;
+nonterminal if_then_else_statement;
+nonterminal while_statement;
+nonterminal forall_statement;
+nonterminal type;
 
 precedence left PLUS, MINUS;
 precedence left DIV, MULT;
@@ -83,6 +95,10 @@ statement ::= let_bind:s {:
             | full_exp:s {:
                 RESULT = (Node)s;
               :}
+            | if_statement
+            | if_elif_statement
+            | while_statement
+            | forall_statement
             ;
 
 full_exp ::= simple_exp:e SEMICOL {: RESULT = (Node)e; :};
@@ -102,21 +118,92 @@ simple_exp ::= number    {: RESULT = new Node(i); :}
                  n.addChild(new Node(")"));
                  RESULT = (Node)e;
                :}
+              |
              ;
 
-operator ::= PLUS  {: RESULT = new Node("+"); :}
+//operators are done - not really
+numeric_operator ::= PLUS  {: RESULT = new Node("+"); :}
            | MINUS {: RESULT = new Node("-"); :}
            | MULT  {: RESULT = new Node("*"); :}
            | DIV   {: RESULT = new Node("/"); :}
-           | XOR   {: RESULT = new Node("^"); :}
+           | POW   {: RESULT = new Node("^"); :}
            ;
 
-let_bind ::= LET IDENTIFIER:i EQUAL full_exp:e {:
+unary_bool_operator ::= NOT {: RESULT = new Node("!"); :};
+
+binary_bool_operator ::= AND {: RESULT = new Node("&&"); :}
+                       | OR {: RESULT = new Node("||"); :}
+                      ;
+
+boolean_operator ::= unary_bool_operator
+                    | binary_bool_operator
+                    ;
+
+bool_comp_operator ::= EQEQ {: RESULT = new Node("=="); :}
+                    | NOTEQ {: RESULT = new Node("!="); :}
+                    ;
+
+num_comp_operator ::= LT {: RESULT = new Node("<"); :}
+                    | LTEQ {: RESULT = new Node("<="); :}
+                    | GTEQ {: RESULT = new Node(">="); :}
+                    | RT {: RESULT = new Node(">"); :}
+                    | bool_comp_operator
+                    ;
+
+dict_operator ::= IDENTIFIER IN IDENTIFIER
+                |
+
+declaration ::= type IDENTIFIER:i EQUAL full_exp:e {:
                Node n = new Node("LET");
                n.addChild(new Node(i));
                n.addChild((Node)e);
                RESULT = n;
              :};
 
+elif_segment ::= ELIF LPAREN simple_exp RPAREN THEN statements
+
+elif_body ::= elif_segment
+            | elif_segment elif_body
+            ;
+
+if_statement ::= IF LPAREN simple_exp RPAREN THEN statements FI
+              | IF LPAREN simple_exp RPAREN THEN statements 
+                  ELSE statements FI
+              ;
+
+if_elif_statement ::= IF LPAREN simple_exp RPAREN THEN statements
+                        elif_body FI
+                   | IF LPAREN simple_exp RPAREN THEN statements
+                         elif_body ELSE statmements FI
+                    ;
+
+while_statement ::=
+    WHILE LPAREN simple_exp RPAREN DO statements OD
+  ;
+
+forall_statement ::= FORALL LPAREN IDENTIFIER IN IDENTIFIER RPAREN
+                      DO statmements OD;
+
+prim_type ::= INT
+        | FLOAT
+        | RAT
+        | BOOL
+        | CHAR
+        ;
+
+agg_type ::= SEQ LT spec_type RT
+        | DICT LT spec_type COMMA spec_type RT
+        ;
+
+spec_type ::= prim_type
+            | agg_type
+            | TOP
+            ;
+
 number ::= INTEGER_LITERAL:i          {: RESULT = new Node(i); :}
           | FLOATING_POINT_LITERAL:f  {: RESULT = new Node(f); :}
+
+integer ::= INTEGER_LITERAL:i         {: RESULT = new Node(i); :}
+          | MINUS INTEGER_LITERAL:i   {: RESULT = new Node(-i); :}
+
+

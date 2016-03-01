@@ -47,14 +47,16 @@ import static .Sym.*;
 	IdChar = {Letter} | {Digit} | "_"
 	Identifier = {Letter}{IdChar}*
 
-	IntegerLiteral = 0 | "-"? [1-9][0-9]* 
+	//IntegerLiteral = 0 | "-"? [1-9][0-9]* 
     // FloatLiteral = {IntegerLiteral} (\. [0-9]+)?
-    FloatLiteral  = "-"? {FLit1}|{FLit2}|{FLit3}
+    //FloatLiteral  = "-"? {FLit1}|{FLit2}|{FLit3}
     // RatLiteral = (({IntegerLiteral} "_")? ({IntegerLiteral} "/" {IntegerLiteral})?) | {IntegerLiteral}
 
-    FLit1    = [0-9]+ \. [0-9]* 
-	FLit2    = \. [0-9]+ 
-	FLit3    = [0-9]+ 
+    // FLit1    = [0-9]+ \. [0-9]* 
+	// FLit2    = \. [0-9]+ 
+	// FLit3    = [0-9]+ 
+
+	IntegerLiteral = 0 | [1-9][0-9]* 
 
     BooleanLiteral = "T" | "F"
 
@@ -69,7 +71,6 @@ import static .Sym.*;
 <YYINITIAL> {
 	/* keywords */
 	"char"							{ return symbol(sym.CHAR); }
-	"let"							{ return symbol(sym.LET); }
 	"bool"							{ return symbol(sym.BOOL); }
 	"tdef"							{ return symbol(sym.TDEF); }
 	"fdef"							{ return symbol(sym.FDEF); }
@@ -126,7 +127,7 @@ import static .Sym.*;
  	"!="							{ return symbol(sym.NOTEQ); }
  	"&&" 							{ return symbol(sym.ANDAND); }
  	"||"							{ return symbol(sym.OROR); }
- 	"^"								{ return symbol(sym.XOR); }
+ 	"^"								{ return symbol(sym.POW); }
  	"+"								{ return symbol(sym.PLUS); }
 	"-"								{ return symbol(sym.MINUS); }
  	"*"								{ return symbol(sym.MULT); }
