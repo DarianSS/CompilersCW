@@ -100,7 +100,6 @@ nonterminal array_access;
 precedence nonassoc AND, OR, NOT, EQEQ, NOTEQ, LT, LTEQ, GT, GTEQ;
 precedence left PLUS, MINUS;
 precedence left DIV, MULT, POW;
-precedence left IDENTIFIER;
 
 
 top_level ::= statements;
@@ -139,7 +138,7 @@ declaration ::= prim_type IDENTIFIER EQ full_exp
               | dict_declaration
               | tdef_declaration;
 
-tdef_declaration ::= IDENTIFIER IDENTIFIER EQ seq_dec_list;
+tdef_declaration ::= prim_type IDENTIFIER EQ seq_dec_list SEMICOLON;
 
 seq_declaration ::= SEQ LT spec_type GT IDENTIFIER SEMICOLON
                   | SEQ LT CHAR GT IDENTIFIER EQ STRING SEMICOLON

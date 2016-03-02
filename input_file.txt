@@ -1,1 +1,1 @@
-person d = 33, 30;
+person d = "Shin", "Yoo", 30;
