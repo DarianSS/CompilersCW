@@ -9,3 +9,7 @@ No multiple initialisations in a single statement because of
 Void functions should be allowed to have a return statement
 
 Special chars can be escaped in strings. (\" or \' or \\)
+
+Strings("example") can only be binded to seq<char>.
+
+User is not allowed " or \ in their string without escaping with a \.

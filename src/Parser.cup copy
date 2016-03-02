@@ -36,12 +36,6 @@ parser code {:
       return ret;
     }
 
-<<<<<<< Updated upstream
-    public void syntax_error(Symbol current_token) { report_error(
-         "Syntax error at line " + (current_token.left+1) + ", column " + current_token.right, null );
-    } 
-=======
->>>>>>> Stashed changes
   }
 
   public void syntax_error(Symbol current_token) { report_error(
@@ -58,12 +52,6 @@ parser code {:
 :};
 
 // Do something with ILLEGAL_CHARARCTER or drop it.
-<<<<<<< Updated upstream
-terminal INT, RAT, FLOAT, BOOL, CHAR, EQUAL, SEMICOL, PLUS, MINUS, MULT, DIV, POW;
-terminal SEQ, DICT;
-terminal LPAREN, RPAREN;
-terminal LT, RT;
-=======
 terminal INT, RAT, FLOAT, BOOL, CHAR, EQ, SEMICOLON, TOP, 
          PLUS, MINUS, MULT, DIV, POW, INTEGER_LITERAL, FLOAT_LITERAL;
 terminal SEQ, DICT;
@@ -76,23 +64,13 @@ terminal ANDAND, OROR, CONCAT;
 terminal READ;
 terminal LBRACE, RBRACE;
 terminal RBRACK, LBRACK;
-terminal LT, GT;
+terminal LT, RT;
 terminal TDEF, FDEF;
->>>>>>> Stashed changes
 terminal IF, THEN, ELSE, ELIF, FI;
 terminal DO, OD;
 terminal WHILE;
 terminal FORALL, IN;
 terminal BADCHAR;
-<<<<<<< Updated upstream
-terminal COMMA, DOT;
-
-nonterminal statements, statement, top_level;
-nonterminal declaration, full_exp, simple_exp, operator;
-nonterminal number;
-nonterminal if_then_statement;
-nonterminal if_then_else_statement;
-=======
 terminal COMMA, DOT; 
 terminal AND, OR, NOT;
 terminal NOTEQ, EQEQ, LTEQ, GTEQ;
@@ -102,18 +80,18 @@ terminal UNDERSCORE;
 
 nonterminal statements, statement, top_level;
 nonterminal declaration, full_exp, simple_exp, operator;
-nonterminal arithmetic_operator, logic_operator, logic_unary_operator;
+nonterminal numeric_operator, unary_bool_operator, 
+            binary_bool_operator, boolean_operator, 
+            bool_comp_operator, num_comp_operator; 
 nonterminal dict_operator;
-nonterminal pos_number, NUMBER;
+nonterminal pos_number, number, integer;
 nonterminal if_statement, if_elif_statement,
             elif_body, elif_segment;
 nonterminal prim_type, agg_type, spec_type;
->>>>>>> Stashed changes
 nonterminal while_statement;
 nonterminal forall_statement;
-nonterminal type;
+nonterminal type, binary_operator;
 
-<<<<<<< Updated upstream
 precedence left PLUS, MINUS;
 precedence left DIV, MULT;
 
@@ -132,37 +110,19 @@ statements ::= statements:ss statement:s {:
                :}
              ;
 
-statement ::= let_bind:s {:
-                RESULT = (Node)s;
-              :}
-            | full_exp:s {:
-                RESULT = (Node)s;
-              :}
-=======
-precedence nonassoc AND, OR, NOT, EQEQ, NOTEQ, LT, LTEQ, GT, GTEQ;
-precedence left PLUS, MINUS;
-precedence left DIV, MULT, POW;
-
-
-top_level ::= statements;
-
-statements ::= statements statement
-             | /* empty */ ;
-
-statement ::= full_exp
->>>>>>> Stashed changes
+statement ::= full_exp:s {: RESULT = (Node)s; :}
             | if_statement
             | if_elif_statement
             | while_statement
             | forall_statement
-<<<<<<< Updated upstream
+            | declaration
             ;
 
-full_exp ::= simple_exp:e SEMICOL {: RESULT = (Node)e; :};
+full_exp ::= simple_exp:e SEMICOLON {: RESULT = (Node)e; :};
 
-simple_exp ::= number    {: RESULT = new Node(i); :}
+simple_exp ::= number:i    {: RESULT = new Node(i); :}
              | IDENTIFIER:i {: RESULT = new Node(i); :}
-             | simple_exp:e1 operator:o simple_exp:e2 {:
+             | simple_exp:e1 binary_operator:o simple_exp:e2 {:
                   Node n = (Node)o;
                   n.addChild((Node)e1);
                   n.addChild((Node)e2);
@@ -175,10 +135,29 @@ simple_exp ::= number    {: RESULT = new Node(i); :}
                  n.addChild(new Node(")"));
                  RESULT = (Node)e;
                :}
-              |
+             | STRING
+             | CHAR
+             ;
+
+declaration ::= prim_type IDENTIFIER:i EQ full_exp:e {:
+               Node n = new Node("IDENT");
+               n.addChild(new Node(i));
+               n.addChild((Node)e);
+               RESULT = n;
+             :}
+              | prim_type IDENTIFIER:i SEMICOLON {: 
+               Node n = new Node("IDENT");
+               n.addChild(new Node(i));
+               RESULT = n;
+             :}
              ;
 
 //operators are done - not really
+
+binary_operator ::= binary_bool_operator
+                  | num_comp_operator
+                  ;
+
 numeric_operator ::= PLUS  {: RESULT = new Node("+"); :}
            | MINUS {: RESULT = new Node("-"); :}
            | MULT  {: RESULT = new Node("*"); :}
@@ -204,20 +183,13 @@ num_comp_operator ::= LT {: RESULT = new Node("<"); :}
                     | LTEQ {: RESULT = new Node("<="); :}
                     | GTEQ {: RESULT = new Node(">="); :}
                     | RT {: RESULT = new Node(">"); :}
-                    | bool_comp_operator
                     ;
 
 dict_operator ::= IDENTIFIER IN IDENTIFIER
-                |
-
-declaration ::= type IDENTIFIER:i EQUAL full_exp:e {:
-               Node n = new Node("LET");
-               n.addChild(new Node(i));
-               n.addChild((Node)e);
-               RESULT = n;
-             :};
+                ;
 
 elif_segment ::= ELIF LPAREN simple_exp RPAREN THEN statements
+               ;
 
 elif_body ::= elif_segment
             | elif_segment elif_body
@@ -230,16 +202,16 @@ if_statement ::= IF LPAREN simple_exp RPAREN THEN statements FI
 
 if_elif_statement ::= IF LPAREN simple_exp RPAREN THEN statements
                         elif_body FI
-                   | IF LPAREN simple_exp RPAREN THEN statements
-                         elif_body ELSE statmements FI
+                    | IF LPAREN simple_exp RPAREN THEN statements
+                        elif_body ELSE statements FI
                     ;
 
-while_statement ::=
-    WHILE LPAREN simple_exp RPAREN DO statements OD
-  ;
+while_statement ::= WHILE LPAREN simple_exp RPAREN DO statements OD
+                  ;
 
 forall_statement ::= FORALL LPAREN IDENTIFIER IN IDENTIFIER RPAREN
-                      DO statmements OD;
+                      DO statements OD
+                   ;
 
 prim_type ::= INT
         | FLOAT
@@ -257,84 +229,12 @@ spec_type ::= prim_type
             | TOP
             ;
 
-number ::= INTEGER_LITERAL:i          {: RESULT = new Node(i); :}
-          | FLOATING_POINT_LITERAL:f  {: RESULT = new Node(f); :}
+number ::= pos_number:no               //{: RESULT = new Node(no); :}
+         | MINUS pos_number:no         //{: RESULT = new Node(-no); :}
+         ;
 
-integer ::= INTEGER_LITERAL:i         {: RESULT = new Node(i); :}
-          | MINUS INTEGER_LITERAL:i   {: RESULT = new Node(-i); :}
-
-
-=======
-            | declaration;
-
-full_exp ::= simple_exp SEMICOLON;
-
-simple_exp ::= NUMBER   
-             | IDENTIFIER
-             | STRING
-             | CHAR
-             | simple_exp operator simple_exp
-             | LPAREN simple_exp RPAREN;
-
-declaration ::= prim_type IDENTIFIER EQ full_exp
-              | prim_type IDENTIFIER SEMICOLON
-              | SEQ LT CHAR GT IDENTIFIER EQ STRING SEMICOLON;
-
-arithmetic_operator ::= PLUS  
-                   | MINUS 
-                   | MULT  
-                   | DIV   
-                   | POW;
-
-logic_operator ::= AND 
-                 | OR
-                 | EQEQ
-                 | NOTEQ
-                 | LT
-                 | LTEQ
-                 | GTEQ 
-                 | GT;
-
-logic_unary_operator ::= NOT;
-
-operator ::= arithmetic_operator
-           | logic_operator;
-
-dict_operator ::= IDENTIFIER IN IDENTIFIER;
-
-elif_segment ::= ELIF LPAREN simple_exp RPAREN THEN statements;
-
-elif_body ::= elif_segment
-            | elif_segment elif_body;
-
-if_statement ::= IF LPAREN simple_exp RPAREN THEN statements FI
-               | IF LPAREN simple_exp RPAREN THEN statements ELSE statements FI;
-
-if_elif_statement ::= IF LPAREN simple_exp RPAREN THEN statements elif_body FI
-                    | IF LPAREN simple_exp RPAREN THEN statements elif_body ELSE statements FI;
-
-while_statement ::= WHILE LPAREN simple_exp RPAREN DO statements OD;
-
-forall_statement ::= FORALL LPAREN IDENTIFIER IN IDENTIFIER RPAREN DO statements OD;
-
-prim_type ::= INT
-            | FLOAT
-            | RAT
-            | BOOL
-            | CHAR;
-
-agg_type ::= SEQ LT spec_type GT
-           | DICT LT spec_type COMMA spec_type GT;
-
-spec_type ::= prim_type
-            | agg_type
-            | TOP;
-
-NUMBER ::= pos_number           
-         | MINUS pos_number;
-
-pos_number ::= INTEGER_LITERAL         
-             | FLOAT_LITERAL               
-             | INTEGER_LITERAL UNDERSCORE INTEGER_LITERAL DIV INTEGER_LITERAL
-             | INTEGER_LITERAL DIV INTEGER_LITERAL;
->>>>>>> Stashed changes
+pos_number ::= INTEGER_LITERAL:i          
+         | FLOAT_LITERAL:f               
+         | INTEGER_LITERAL:i UNDERSCORE INTEGER_LITERAL DIV INTEGER_LITERAL {: :}
+         | INTEGER_LITERAL DIV INTEGER_LITERAL {: :}
+         ;

@@ -1,11 +1,5 @@
 
-package ;
-
 import java_cup.runtime.*;
-import java.io.IOException;
-
-import .Sym;
-import static .Sym.*;
 
 %%
 
@@ -14,14 +8,6 @@ import static .Sym.*;
 %cup
 %line
 %column
-
-// %public
-%final
-// %abstract
-
-%cupsym .Sym
-%cup
-// %cupdebug
 
 %{
 	StringBuffer string = new StringBuffer();
@@ -34,37 +20,38 @@ import static .Sym.*;
 	}
 %}
 
-	LineTerminator = \r|\n|\r\n
-    InputCharacter = [^\r\n]
-    Whitespace = {LineTerminator} | " " | "\t"
+LineTerminator = \r|\n|\r\n
+InputCharacter = [^\r\n]
+Whitespace = {LineTerminator} | " " | "\t"
 
-    Comment = {NormalComment} | {SingleLineComment}
-    NormalComment = "/#" [^#] ~"#/" | "/#" "#"+ "/"
-    SingleLineComment = "#" {InputCharacter}* {LineTerminator}?
-    
-    Letter = [a-zA-Z]
-	Digit = [0-9]
-	IdChar = {Letter} | {Digit} | "_"
-	Identifier = {Letter}{IdChar}*
+Comment = {NormalComment} | {SingleLineComment}
+NormalComment = "/#" [^#] ~"#/" | "/#" "#"+ "/"
+SingleLineComment = "#" {InputCharacter}* {LineTerminator}?
 
-	//IntegerLiteral = 0 | "-"? [1-9][0-9]* 
-    // FloatLiteral = {IntegerLiteral} (\. [0-9]+)?
-    //FloatLiteral  = "-"? {FLit1}|{FLit2}|{FLit3}
-    // RatLiteral = (({IntegerLiteral} "_")? ({IntegerLiteral} "/" {IntegerLiteral})?) | {IntegerLiteral}
+Letter = [a-zA-Z]
+Digit = [0-9]
+IdChar = {Letter} | {Digit} | "_"
+Identifier = {Letter}{IdChar}*
 
-    // FLit1    = [0-9]+ \. [0-9]* 
-	// FLit2    = \. [0-9]+ 
-	// FLit3    = [0-9]+ 
+//IntegerLiteral = 0 | "-"? [1-9][0-9]* 
+// FloatLiteral = {IntegerLiteral} (\. [0-9]+)?
+// RatLiteral = (({IntegerLiteral} "_")? ({IntegerLiteral} "/" {IntegerLiteral})?) | {IntegerLiteral}
 
-	IntegerLiteral = 0 | [1-9][0-9]* 
+FloatLiteral  = "-"? {FLit1}|{FLit2}|{FLit3}
 
-    BooleanLiteral = "T" | "F"
+FLit1    = [0-9]+ \. [0-9]* 
+FLit2    = \. [0-9]+ 
+FLit3    = [0-9]+ 
 
-    Punctuation = [["!".."/"] || [":".."@"] || ["[".."`"] || ["{".."~"]]
+IntegerLiteral = 0 | [1-9][0-9]* 
 
-    SingleChar = {Punctuation} | {Letter} | {Digit} | " "   
-    
-    %state STRING, CHARLITERAL
+BooleanLiteral = "T" | "F"
+
+Punctuation = [[!] || [#-/] || [:-@] || [\[] || [\]-`] || [{-~]]
+
+SingleChar = {Punctuation} | {Letter} | {Digit} | " "   
+
+%state STRING, CHARLITERAL
 
 %%
 
@@ -103,7 +90,7 @@ import static .Sym.*;
  	"null"							{ return symbol(sym.NULL_LITERAL); }
 
  	/* identifiers */ 
-  	{Identifier}					{ return symbol(sym.IDENTIFIER, yytext());
+  	{Identifier}					{ return symbol(sym.IDENTIFIER, yytext()); }
 
 	/* Separators */
 	"("								{ return symbol(sym.LPAREN); }
@@ -118,8 +105,9 @@ import static .Sym.*;
 
  	/* Operators */
  	"="								{ return symbol(sym.EQ); }
+ 	"_"								{ return symbol(sym.UNDERSCORE); }
 	"<"								{ return symbol(sym.LT); }
-	">"								{ return symbol(sym.RT); }
+	">"								{ return symbol(sym.GT); }
 	"!"								{ return symbol(sym.NOT); }
 	"=="							{ return symbol(sym.EQEQ); }
  	"<="							{ return symbol(sym.LTEQ); }
@@ -136,20 +124,20 @@ import static .Sym.*;
  	"::"							{ return symbol(sym.CONCAT); }
 
  	/* string literal */
-	\"								{ yybegin(STRING); string.setLength(0); }
+	\"								{ string.setLength(0); yybegin(STRING); }
 
   	/* character literal */
 	\'								{ yybegin(CHARLITERAL); }
 
 	/* Number literals */
 	{IntegerLiteral}				{ return symbol(sym.INTEGER_LITERAL, new Integer(yytext())); }
-	{FloatLiteral}					{ return symbol(sym.FLOATING_POINT_LITERAL, new Float(yytext().substring(0,yylength()-1))); }
+	{FloatLiteral}					{ return symbol(sym.FLOAT_LITERAL, new Float(yytext().substring(0,yylength()-1))); }
 
 	/* comments */
 	{Comment}						{ /* ignore */ }
 
  	/* whitespace */
-	{WhiteSpace}					{ /* ignore */ } 
+	{Whitespace}					{ /* ignore */ } 
 }
 
 <STRING> {
@@ -164,6 +152,8 @@ import static .Sym.*;
 
 <CHARLITERAL> {
 	{SingleChar}\'					{ yybegin(YYINITIAL); return symbol(sym.CHAR, yytext().charAt(0)); }
+	\\'\'							{ yybegin(YYINITIAL); return symbol(sym.CHAR, yytext().charAt(0)); }
+	\\\\\'							{ yybegin(YYINITIAL); return symbol(sym.CHAR, yytext().charAt(0)); }
 }
 
 [^]  {
