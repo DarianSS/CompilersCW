@@ -13,3 +13,5 @@ Special chars can be escaped in strings. (\" or \' or \\)
 Strings("example") can only be binded to seq<char>.
 
 User is not allowed " or \ in their string without escaping with a \.
+
+Can types be identifiers??? because of...see Listing 1 in the docs.

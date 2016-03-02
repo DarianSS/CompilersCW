@@ -68,6 +68,7 @@ SingleChar = {Punctuation} | {Letter} | {Digit} | " "
 	"dict"							{ return symbol(sym.DICT); }
 	"in"							{ return symbol(sym.IN); }
 	"read"							{ return symbol(sym.READ); }
+	"print"							{ return symbol(sym.PRINT); }
 	"return"						{ return symbol(sym.RETURN); }
 	"void"							{ return symbol(sym.VOID); }
 	"while"							{ return symbol(sym.WHILE); }

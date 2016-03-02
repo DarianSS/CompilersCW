@@ -61,7 +61,7 @@ terminal BOOLEAN_LITERAL;
 terminal COLON;
 terminal STRING;
 terminal ANDAND, OROR, CONCAT;
-terminal READ;
+terminal READ, PRINT;
 terminal LBRACE, RBRACE;
 terminal RBRACK, LBRACK;
 terminal LT, GT;
@@ -80,19 +80,27 @@ terminal UNDERSCORE;
 
 nonterminal statements, statement, top_level;
 nonterminal declaration, full_exp, simple_exp, operator;
+nonterminal seq_declaration, seq_dec_list;
+nonterminal dict_declaration, dict_dec_list;
+nonterminal tdef_declaration;
 nonterminal arithmetic_operator, logic_operator, logic_unary_operator;
 nonterminal dict_operator;
-nonterminal pos_number, NUMBER;
+nonterminal pos_number, number;
 nonterminal if_statement, if_elif_statement,
             elif_body, elif_segment;
 nonterminal prim_type, agg_type, spec_type;
 nonterminal while_statement;
 nonterminal forall_statement;
 nonterminal type;
+nonterminal declaration_list, declaration_list_item;
+nonterminal alias, tdef;
+nonterminal fdef, formal_parameter_list, formal_parameter_list_item;
+nonterminal array_access;
 
 precedence nonassoc AND, OR, NOT, EQEQ, NOTEQ, LT, LTEQ, GT, GTEQ;
 precedence left PLUS, MINUS;
 precedence left DIV, MULT, POW;
+precedence left IDENTIFIER;
 
 
 top_level ::= statements;
@@ -105,20 +113,46 @@ statement ::= full_exp
             | if_elif_statement
             | while_statement
             | forall_statement
-            | declaration;
+            | declaration
+            | tdef
+            | fdef
+            | alias
+            | RETURN full_exp
+            | READ IDENTIFIER SEMICOLON
+            | PRINT full_exp;
 
 full_exp ::= simple_exp SEMICOLON;
 
-simple_exp ::= NUMBER   
+simple_exp ::= number   
              | IDENTIFIER
              | STRING
              | CHAR
              | simple_exp operator simple_exp
-             | LPAREN simple_exp RPAREN;
+             | LPAREN simple_exp RPAREN
+             | array_access
+             | IDENTIFIER DOT IDENTIFIER; 
 
 declaration ::= prim_type IDENTIFIER EQ full_exp
               | prim_type IDENTIFIER SEMICOLON
-              | SEQ LT CHAR GT IDENTIFIER EQ STRING SEMICOLON;
+              | IDENTIFIER EQ full_exp
+              | seq_declaration
+              | dict_declaration
+              | tdef_declaration;
+
+tdef_declaration ::= IDENTIFIER IDENTIFIER EQ seq_dec_list;
+
+seq_declaration ::= SEQ LT spec_type GT IDENTIFIER SEMICOLON
+                  | SEQ LT CHAR GT IDENTIFIER EQ STRING SEMICOLON
+                  | SEQ LT spec_type GT IDENTIFIER EQ LBRACK seq_dec_list RBRACK SEMICOLON;
+
+seq_dec_list ::= simple_exp COMMA seq_dec_list
+               | simple_exp;
+
+dict_declaration ::= DICT LT spec_type COMMA spec_type GT IDENTIFIER SEMICOLON
+                   | DICT LT spec_type COMMA spec_type GT IDENTIFIER EQ LBRACE dict_dec_list RBRACE SEMICOLON;
+
+dict_dec_list ::= simple_exp COLON simple_exp COMMA dict_dec_list
+                | simple_exp COLON simple_exp;                    
 
 arithmetic_operator ::= PLUS  
                    | MINUS 
@@ -161,7 +195,8 @@ prim_type ::= INT
             | FLOAT
             | RAT
             | BOOL
-            | CHAR;
+            | CHAR
+            | IDENTIFIER;
 
 agg_type ::= SEQ LT spec_type GT
            | DICT LT spec_type COMMA spec_type GT;
@@ -170,7 +205,33 @@ spec_type ::= prim_type
             | agg_type
             | TOP;
 
-NUMBER ::= pos_number           
+declaration_list ::= declaration_list COMMA declaration_list_item
+                   | declaration_list_item;
+
+declaration_list_item ::= prim_type IDENTIFIER
+                        | agg_type IDENTIFIER;
+
+alias ::= ALIAS spec_type IDENTIFIER SEMICOLON;
+
+tdef ::= TDEF IDENTIFIER LBRACE declaration_list RBRACE SEMICOLON;
+
+fdef ::= FDEF prim_type IDENTIFIER LPAREN formal_parameter_list RPAREN LBRACE statements RBRACE SEMICOLON
+       |FDEF agg_type IDENTIFIER LPAREN formal_parameter_list RPAREN LBRACE statements RBRACE SEMICOLON;
+
+formal_parameter_list ::= formal_parameter_list COMMA formal_parameter_list_item
+                        | formal_parameter_list_item;
+
+formal_parameter_list_item ::= prim_type IDENTIFIER
+                             | agg_type IDENTIFIER;
+
+array_access ::= IDENTIFIER LBRACK simple_exp RBRACK
+               | IDENTIFIER LBRACK simple_exp COLON simple_exp RBRACK
+               | IDENTIFIER LBRACK COLON simple_exp RBRACK
+               | IDENTIFIER LBRACK simple_exp COLON RBRACK;
+
+
+
+number ::= pos_number           
          | MINUS pos_number;
 
 pos_number ::= INTEGER_LITERAL         
