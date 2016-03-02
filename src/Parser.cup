@@ -5,6 +5,8 @@ scan with {: return lexer.next_token(); :};
 
 parser code {:
 
+  public int i = 0;
+
   private boolean debug = false;
   public boolean  debug()         {return debug;}
   public void     debug(boolean b){debug = b;}
@@ -47,6 +49,7 @@ parser code {:
   public Parser(Lexer lex) {
     super(lex);
     lexer = lex;
+    System.out.println(i);
   }
 
 :};
@@ -54,6 +57,7 @@ parser code {:
 // Do something with ILLEGAL_CHARARCTER or drop it.
 terminal INT, RAT, FLOAT, BOOL, CHAR, EQ, SEMICOLON, TOP, 
          PLUS, MINUS, MULT, DIV, POW, INTEGER_LITERAL, FLOAT_LITERAL;
+terminal MAIN;
 terminal SEQ, DICT;
 terminal IDENTIFIER;
 terminal LPAREN, RPAREN;
@@ -94,8 +98,12 @@ nonterminal forall_statement;
 nonterminal type;
 nonterminal declaration_list, declaration_list_item;
 nonterminal alias, tdef;
-nonterminal fdef, formal_parameter_list, formal_parameter_list_item;
+nonterminal fdef, formal_parameter_list, formal_parameter_list_item, fdef_type;
 nonterminal array_access;
+nonterminal main;
+nonterminal function_call, return_statement;
+nonterminal concat, concat_item, concat_items;
+nonterminal array_list, array_list_items, array_list_item;
 
 precedence nonassoc AND, OR, NOT, EQEQ, NOTEQ, LT, LTEQ, GT, GTEQ;
 precedence left PLUS, MINUS;
@@ -116,9 +124,10 @@ statement ::= full_exp
             | tdef
             | fdef
             | alias
-            | RETURN full_exp
+            | return_statement
             | READ IDENTIFIER SEMICOLON
-            | PRINT full_exp;
+            | PRINT full_exp
+            | main {: i = 3; :};
 
 full_exp ::= simple_exp SEMICOLON;
 
@@ -129,7 +138,9 @@ simple_exp ::= number
              | simple_exp operator simple_exp
              | LPAREN simple_exp RPAREN
              | array_access
-             | IDENTIFIER DOT IDENTIFIER; 
+             | IDENTIFIER DOT IDENTIFIER
+             | function_call
+             ; 
 
 declaration ::= prim_type IDENTIFIER EQ full_exp
               | prim_type IDENTIFIER SEMICOLON
@@ -141,17 +152,19 @@ declaration ::= prim_type IDENTIFIER EQ full_exp
 tdef_declaration ::= prim_type IDENTIFIER EQ seq_dec_list SEMICOLON;
 
 seq_declaration ::= SEQ LT spec_type GT IDENTIFIER SEMICOLON
-                  | SEQ LT CHAR GT IDENTIFIER EQ STRING SEMICOLON
-                  | SEQ LT spec_type GT IDENTIFIER EQ LBRACK seq_dec_list RBRACK SEMICOLON;
+                  //| SEQ LT CHAR GT IDENTIFIER EQ STRING SEMICOLON
+                  | SEQ LT spec_type GT IDENTIFIER EQ LBRACK seq_dec_list SEMICOLON;
 
 seq_dec_list ::= simple_exp COMMA seq_dec_list
-               | simple_exp;
+               | simple_exp RBRACK
+               | RBRACK;
 
 dict_declaration ::= DICT LT spec_type COMMA spec_type GT IDENTIFIER SEMICOLON
                    | DICT LT spec_type COMMA spec_type GT IDENTIFIER EQ LBRACE dict_dec_list RBRACE SEMICOLON;
 
 dict_dec_list ::= simple_exp COLON simple_exp COMMA dict_dec_list
-                | simple_exp COLON simple_exp;                    
+                | simple_exp COLON simple_exp
+                | ;                    
 
 arithmetic_operator ::= PLUS  
                    | MINUS 
@@ -214,8 +227,43 @@ alias ::= ALIAS spec_type IDENTIFIER SEMICOLON;
 
 tdef ::= TDEF IDENTIFIER LBRACE declaration_list RBRACE SEMICOLON;
 
-fdef ::= FDEF prim_type IDENTIFIER LPAREN formal_parameter_list RPAREN LBRACE statements RBRACE SEMICOLON
-       |FDEF agg_type IDENTIFIER LPAREN formal_parameter_list RPAREN LBRACE statements RBRACE SEMICOLON;
+fdef ::= FDEF fdef_type IDENTIFIER LPAREN formal_parameter_list RPAREN LBRACE statements RBRACE SEMICOLON;
+
+fdef_type ::= prim_type
+            | agg_type
+            | VOID
+            ;
+
+concat ::= simple_exp concat_items
+          ;
+
+concat_items ::= concat_items concat_item
+                | /* for termination */
+                ;
+
+concat_item ::= CONCAT IDENTIFIER
+              | CONCAT array_access
+              | CONCAT array_list
+              ;
+
+array_list ::= LBRACK array_list_items RBRACK;
+
+array_list_items ::= array_list_item COMMA array_list_items
+                    | array_list_item
+                    ;
+
+array_list_item ::= IDENTIFIER
+                  | number
+                  | CHAR
+                  | STRING
+                  ;
+
+function_call ::= IDENTIFIER LPAREN simple_exp RPAREN;
+
+return_statement ::= RETURN full_exp
+                    | RETURN SEMICOLON
+                    ;
+
 
 formal_parameter_list ::= formal_parameter_list COMMA formal_parameter_list_item
                         | formal_parameter_list_item;
@@ -228,7 +276,7 @@ array_access ::= IDENTIFIER LBRACK simple_exp RBRACK
                | IDENTIFIER LBRACK COLON simple_exp RBRACK
                | IDENTIFIER LBRACK simple_exp COLON RBRACK;
 
-
+main ::= MAIN LBRACE statements RBRACE SEMICOLON;
 
 number ::= pos_number           
          | MINUS pos_number;
