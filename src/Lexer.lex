@@ -82,6 +82,7 @@ SingleChar = {Punctuation} | {Letter} | {Digit} | " "
 	"top"							{ return symbol(sym.TOP); }
 	"alias"							{ return symbol(sym.ALIAS); }
 	"then"							{ return symbol(sym.THEN); }
+	"main"							{ return symbol(sym.MAIN); }
 
 	/* boolean literals */ 
  	"T"								{ return symbol(sym.BOOLEAN_LITERAL, true); }
