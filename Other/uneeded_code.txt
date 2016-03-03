@@ -1,3 +1,0 @@
-"\\t"							{ string.append('\t'); }
-"\\n"							{ string.append('\n'); }
-"\\r"							{ string.append('\r'); }

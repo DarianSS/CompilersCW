@@ -1,1 +1,10 @@
-person d = "Shin", "Yoo", 30;
+
+main {
+
+
+
+	a[2:len(a)-1];
+
+
+
+};

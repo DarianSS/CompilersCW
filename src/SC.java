@@ -9,31 +9,16 @@ import java_cup.runtime.*;
 class SC {
   public static void main(String[] argv) {
 
-    if(argv.length < 1
-    || argv.length > 2){
-      System.err.printf("USAGE:\n\n  %s\n    or\n  %s\n    or\n  %s\n",
-"java -cp bin:lib/java-cup-11b-runtime.jar Main input_file",
-"java -cp bin:lib/java-cup-11b-runtime.jar Main show-lexing input_file",
-"java -cp bin:lib/java-cup-11b-runtime.jar Main show-parsing input_file"
+    if(argv.length != 1){
+      System.err.printf("USAGE:\n  %s\n",
+"java -cp bin:lib/java-cup-11b-runtime.jar SC input_file"
       );
       System.exit(1);
     }
 
-    boolean showLexing = false;
-    boolean showParsing = false;
     String inputFile = null;
 
-    for(String arg : argv){
-      if     (arg.equals("show-lexing"))  showLexing = true;
-      else if(arg.equals("show-parsing")) showParsing = true;
-      else                                inputFile = arg;
-    }
-
-    /* if(showLexing && showParsing){
-      System.err.println(
-        "Specify at most one of show-lexing or show-parsing");
-      System.exit(1);
-    } */
+    inputFile = argv[0];
 
     if(inputFile == null){
       System.err.println("Specify input file as the last argument");
@@ -50,13 +35,11 @@ class SC {
 
       java_cup.runtime.Symbol symbol = null;
 
-      if(showParsing){
-        //parser.debug(true);
-        System.out.println("digraph G {");
+      try {
         Symbol result = parser.parse();
-        System.out.println("}");
-      } else {
-        Symbol result = parser.parse();
+        System.out.println("parsing successful");
+      } catch (Exception e) {
+
       }
 
       //System.out.println();

@@ -45,8 +45,6 @@ FLit3    = [0-9]+
 
 IntegerLiteral = 0 | [1-9][0-9]* 
 
-BooleanLiteral = "T" | "F"
-
 Punctuation = [[!] || [#-/] || [:-@] || [\[] || [\]-`] || [{-~]]
 
 SingleChar = {Punctuation} | {Letter} | {Digit} | " "   
@@ -123,7 +121,6 @@ SingleChar = {Punctuation} | {Letter} | {Digit} | " "
  	"*"								{ return symbol(sym.MULT); }
  	"/"								{ return symbol(sym.DIV); }
  	":"								{ return symbol(sym.COLON); }
- 	"::"							{ return symbol(sym.CONCAT); }
 
  	/* string literal */
 	\"								{ string.setLength(0); yybegin(STRING); }
@@ -161,5 +158,5 @@ SingleChar = {Punctuation} | {Letter} | {Digit} | " "
 [^]  {
   System.out.println("file:" + (yyline+1) +
     ":0: Error: Invalid input '" + yytext()+"'");
-  return symbol(sym.BADCHAR);
+  // return symbol(sym.BADCHAR);
 }
