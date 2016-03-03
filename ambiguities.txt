@@ -1,0 +1,9 @@
+Rat will be treated as -(345_11/3).
+
+The dict example is a mistake. All elements of a dict type are pairs.
+
+Multiple initialisations in a single statement  are not possible.
+
+Void functions should be allowed to have a return statement.
+
+Special chars can be escaped in strings or chars. (\" or \' or \\).

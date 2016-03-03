@@ -53,7 +53,6 @@ parser code {:
 
 :};
 
-// Do something with ILLEGAL_CHARARCTER or drop it.
 terminal INT, RAT, FLOAT, BOOL, CHAR, EQ, SEMICOLON, TOP, 
          PLUS, MINUS, MULT, DIV, POW, INTEGER_LITERAL, FLOAT_LITERAL;
 terminal MAIN;
@@ -83,7 +82,7 @@ terminal UNDERSCORE;
 nonterminal statements, statement, top_level;
 nonterminal declaration, full_exp, simple_exp, operator;
 nonterminal seq_declaration;
-nonterminal dict_declaration, dict_dec_list;
+nonterminal dict_declaration, dict_dec_list, dict_list;
 nonterminal arithmetic_operator, logic_operator, logic_unary_operator;
 nonterminal pos_number, number;
 nonterminal if_statement, if_elif_statement,
@@ -99,7 +98,7 @@ nonterminal main;
 nonterminal function_call, return_statement;
 nonterminal array_list, array_list_items;
 nonterminal parameters;
-nonterminal tdef_list,tdef_helper;
+nonterminal tdef_list;
 nonterminal dot_access;
 nonterminal array_access_index, array_access_index_list;
 
@@ -128,26 +127,25 @@ statement ::= full_exp
 
 full_exp ::= simple_exp SEMICOLON;
 
-simple_exp ::= //array_list_item
-             number
+simple_exp ::= number
+             | CHAR
              | STRING
              | IDENTIFIER
-             //simple_exp_value
+             | NULL_LITERAL
+             | BOOLEAN_LITERAL
              | array_access
              | array_list
-             | CHAR
              | simple_exp operator simple_exp
              | LPAREN simple_exp RPAREN
              | function_call
              | logic_unary_operator simple_exp
-             | BOOLEAN_LITERAL
              | dot_access
-             | NULL_LITERAL
+             | dict_list 
              ;
 
 declaration ::= prim_type IDENTIFIER EQ full_exp
               | prim_type IDENTIFIER SEMICOLON
-              | prim_type IDENTIFIER EQ tdef_list tdef_helper SEMICOLON //for tdef declarations
+              | prim_type IDENTIFIER EQ tdef_list simple_exp SEMICOLON //for tdef declarations
               | IDENTIFIER EQ full_exp
               | seq_declaration
               | dot_access EQ full_exp
@@ -155,24 +153,23 @@ declaration ::= prim_type IDENTIFIER EQ full_exp
 
 dot_access ::= IDENTIFIER DOT IDENTIFIER;
 
-tdef_helper ::= simple_exp ;// | array_list;
-
-tdef_list ::= tdef_list tdef_helper COMMA
-            | tdef_helper COMMA; 
+tdef_list ::= tdef_list simple_exp COMMA
+            | simple_exp COMMA; 
 
 seq_declaration ::= SEQ LT spec_type GT IDENTIFIER SEMICOLON
                   | SEQ LT spec_type GT IDENTIFIER EQ simple_exp SEMICOLON
                   | SEQ LT spec_type GT IDENTIFIER EQ LBRACK RBRACK SEMICOLON
                   | SEQ LT spec_type GT IDENTIFIER EQ simple_exp COLON COLON simple_exp SEMICOLON;
 
+dict_list ::= LBRACE dict_dec_list RBRACE;  
 
 dict_declaration ::= DICT LT spec_type COMMA spec_type GT IDENTIFIER SEMICOLON
-                   | DICT LT spec_type COMMA spec_type GT IDENTIFIER EQ LBRACE dict_dec_list RBRACE SEMICOLON
+                   | DICT LT spec_type COMMA spec_type GT IDENTIFIER EQ LBRACE dict_list RBRACE SEMICOLON
                    | DICT LT spec_type COMMA spec_type GT IDENTIFIER EQ simple_exp SEMICOLON;
 
 dict_dec_list ::= simple_exp COLON simple_exp COMMA dict_dec_list
                 | simple_exp COLON simple_exp
-                | /*empty*/;                    
+                | /*empty*/;             
 
 arithmetic_operator ::= PLUS  
                    | MINUS 
